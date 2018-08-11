@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-jms="http://www.springframework.org/schema/integration/jms"
+	xmlns:int-xml="http://www.springframework.org/schema/integration/xml"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/integration
+		http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/integration/jms
+        http://www.springframework.org/schema/integration/jms/spring-integration-jms.xsd
+        http://www.springframework.org/schema/integration/xml
+        http://www.springframework.org/schema/integration/xml/spring-integration-xml.xsd">
+	
+	<context:property-placeholder location="classpath:META-INF/production/integration/jms.properties"/>
+	<beans:bean id="connectionFactory" class="progress.message.jclient.QueueConnectionFactory">
+		<beans:constructor-arg value="tcp://${jms.server.host}:${jms.server.port}"/>
+		<beans:constructor-arg value="${jms.server.user}"/>
+		<beans:constructor-arg value="${jms.server.password}"/>
+	</beans:bean>
+		<int:channel id="javaInventoryChannel"/>
+	<int:channel id="xmlInventoryChannel"/>
+    <int-xml:marshalling-transformer
+        input-channel="javaInventoryChannel"
+        output-channel="xmlInventoryChannel"
+        marshaller="xmlMarshaller"
+        result-transformer="resultToDocumentTransformer"/>
+
+    <beans:bean id="resultToDocumentTransformer"
+          class="org.springframework.integration.xml.transformer.ResultToDocumentTransformer"/>
+
+    
+
+	<int-jms:outbound-channel-adapter channel="xmlInventoryChannel" destination-name="${jms.inbound.queue}" connection-factory="connectionFactory" />
+	
+	<int-jms:message-driven-channel-adapter channel="fromJMS" destination-name="${jms.inbound.queue}" extract-payload="true" />
+	
+	<beans:bean id="xmlMarshaller"
+                class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+        <beans:property name="classesToBeBound"
+                  value="com.smkw.commerce.inventory.xml.IMMessage"/>
+    </beans:bean>
+	<int-xml:unmarshalling-transformer unmarshaller="xmlMarshaller" input-channel="fromJMS" output-channel="xmlObjects" />
+	<int:outbound-channel-adapter ref="itemMoveProcessor" method="process" channel="xmlObjects" />
+	<int:channel id="xmlObjects" datatype="com.smkw.commerce.inventory.xml.IMMessage" />
+	<int:channel id="fromJMS">
+		<int:queue/>
+	</int:channel>	
+	<int:poller default="true" fixed-delay="3000" time-unit="MILLISECONDS" max-messages-per-poll="1"/> 
+	<beans:bean id="itemMoveProcessor"
+		class="com.smkw.commerce.inventory.integration.service.ItemMoveProcessor">
+	</beans:bean>
+</beans:beans>
