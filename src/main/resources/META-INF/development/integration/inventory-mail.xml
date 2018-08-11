@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mail="http://www.springframework.org/schema/integration/mail"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-jms="http://www.springframework.org/schema/integration/jms"
+	xmlns:int-xml="http://www.springframework.org/schema/integration/xml"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+			http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+			http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+			http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
+			http://www.springframework.org/schema/integration/mail http://www.springframework.org/schema/integration/mail/spring-integration-mail.xsd">
+	<context:component-scan base-package="com.smkw.commerce.inventory.integration.mail"/>
+	<int:channel id="notifications"
+		datatype="com.smkw.commerce.inventory.integration.mail.FailedInventoryAdjustmentNotification" />
+	<int:filter input-channel="notifications" id="failureCriteriaFilter"
+		ref="filterCriteriaBean" method="isFailure"
+		output-channel="failureNotifications">
+	</int:filter>
+	<int:channel id="failureNotifications" />
+	<int:chain input-channel="failureNotifications" id="systemMessageChain" output-channel="emailOut">
+		<mail:header-enricher >
+           <mail:to value="ldolbir@DigitalChalk.com"/>
+           <mail:subject value="Inventory processing failure" />
+       </mail:header-enricher>
+		<int:transformer ref="messageGenerator" method="generateEmail" />
+	</int:chain>
+	<int:channel id="emailOut" />
+	<mail:outbound-channel-adapter id="senderAdapter" channel="emailOut" host="smtp.gmail.com" port="587" username="leoniddolbir" password="LeoGooglePassword8324" java-mail-properties="javaMailProperties"/>
+	<util:properties id="javaMailProperties">
+		<beans:prop key="mail.debug">true</beans:prop>
+		<beans:prop key="mail.smtps.auth">true</beans:prop>
+		<beans:prop key="mail.smtp.starttls.enable">true</beans:prop>
+	</util:properties>
+	<beans:bean id="messageGenerator"
+		class="com.smkw.commerce.inventory.integration.mail.FailureMessageGenerator">
+	</beans:bean>
+			
+	<beans:bean id="filterCriteriaBean" class="com.smkw.commerce.inventory.integration.messages.FailureCriteriaFilter">
+		<beans:property name="messageThreashold" value="30" />
+		<beans:property name="timeThreashold" value="60" />
+	</beans:bean>
+</beans:beans>

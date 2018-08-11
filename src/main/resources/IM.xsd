@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="" xmlns:prodata="urn:schemas-progress-com:xml-prodata:0001">
+  <xsd:element name="IMMessage" prodata:proDataSet="true" prodata:datasetName="ProDataSet">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="ItemMovement" minOccurs="0" maxOccurs="unbounded">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="StoreId" type="xsd:string" nillable="false" minOccurs="1" maxOccurs="1"/>
+              <xsd:element name="ItemNum" type="xsd:string" nillable="false" minOccurs="1" maxOccurs="1"/>
+              <xsd:element name="PackNum" type="xsd:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+              <xsd:element name="QtySold" type="xsd:decimal" nillable="false" minOccurs="1" maxOccurs="1"/>
+              <xsd:element name="NetSales" type="xsd:decimal" nillable="false" minOccurs="1" maxOccurs="1"/>
+              <xsd:element name="RtnToInv" type="xsd:decimal" nillable="true" minOccurs="1" maxOccurs="1"/>
+              <xsd:element name="RtnDamaged" type="xsd:decimal" nillable="true" minOccurs="1" maxOccurs="1"/>
+              <xsd:element name="DiscAmt" type="xsd:decimal" nillable="true" minOccurs="1" maxOccurs="1"/>
+              <xsd:element name="MarkdownAmt" type="xsd:decimal" nillable="true" minOccurs="1" maxOccurs="1"/>
+              <xsd:element name="CouponAmt" type="xsd:decimal" nillable="true" minOccurs="1" maxOccurs="1"/>
+            </xsd:sequence>
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>
